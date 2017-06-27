@@ -43,17 +43,17 @@ python drive.py model.h5
 
 The *train_model.ipynb* file contains the code I used to train a convolutional
 neural network used for autonomous driving. The sections in the notebook are:
-- Utility functions (used to read in images from the training dataset and images
-augmentation.)
-- Validation set preparation.
-- Training set preparation.
+- Utility functions (used to read in images and augment images.)
+- Generators for training data and validation data.
 - Model training.
 
 ### Model Architecture and Training Strategy
 
 #### 1. An appropriate model architecture has been employed
 
-![alt text][architecture]
+<!-- ![alt text][architecture] -->
+<img src="./figs/cnn-architecture.png" width="400"/>
+
 
 I use the architecture designed by NVIDIA (https://devblogs.nvidia.com/parallelforall/deep-learning-self-driving-cars/).
 The model consists of one normalization layer, four convolutional layers, and
@@ -97,22 +97,55 @@ The NVIDIA neural network architecture is introduced during lecture, and it is p
 To obtain training data, I drive one lap in each direction for both tracks provided in the simulator. I also do some recovery driving by taking the car to the left or right side then steer it back to the center of the lane.
 It was not very easy driving with the simulator because the driving feeling is totally unrealistic. I think the data get better when I turn smoothly on corners, i.e. try to keep the steering angle consistent during a turn.
 
-I loaded the training data with images of left, center, and right cameras using *matplotlib*. It is important to note that in the example provided during lecture, images are imported using *OpenCV*. Since OpenCV uses BGR colormap as default, it affects the accuracy of the model because the model uses RGB colormap during testing.
+I load the training data with images of left, center, and right cameras using *matplotlib*. It is important to note that in the example provided during lecture, images are imported using *OpenCV*. Since OpenCV uses BGR colormap as default, it affects the accuracy of the model because the model uses RGB colormap during testing.
 
 The validation set is obtained separately from the training set because I want the validation set to be consistent so I can easily compare different networks. The validation set consists of two laps of driving in each track.
 
-With the training and validation sets available, I use Keras to train a convolutional neural network with the same hyperparameters used by NVIDIA. After raining is finished, the model can be used to drive in the simulator by using the script *drive.py*.
+With the training and validation sets available, I use Keras to train a convolutional neural network with the same hyperparameters used by NVIDIA. After training is finished, the model can be used to drive in the simulator by using the script *drive.py*.
 
 
 #### 2. Final Model Architecture
 
-added later using a table
+| Layer         		|     Description	        					|
+|:---------------------:|:---------------------------------------------:|
+| Input         		| 160x320x3 RGB image					    	|
+| Cropping              | output 85x320x3 RGB image                     |
+| Normalization         | normalize to [-1. 1] range with zero mean     |
+| Convolution 5x5     	| 2x2 stride, valid padding                   	|
+| ELU					|												|
+| Dropout               | 0.2                                           |
+| Convolution 5x5     	| 2x2 stride, valid padding                   	|
+| ELU					|												|
+| Dropout               | 0.2                                           |
+| Convolution 5x5     	| 2x2 stride, valid padding                   	|
+| ELU					|												|
+| Dropout               | 0.2                                           |
+| Convolution 3x3     	| 1x1 stride, valid padding                   	|
+| ELU					|												|
+| Dropout               | 0.2                                           |
+| Convolution 3x3     	| 1x1 stride, valid padding                   	|
+| ELU					|												|
+| Dropout               | 0.2                                           |
+| Flatten               | outputs 1164                                  |
+| Dropout               | 0.2                                           |
+| Fully connected		| outputs 100        							|
+| ELU					|												|
+| Dropout               | 0.2                                           |
+| Fully connected		| outputs 50        							|
+| ELU					|												|
+| Dropout               | 0.2                                           |
+| Fully connected		| outputs 10        							|
+| ELU					|												|
+| Dropout               | 0.2                                           |
+| Fully connected		| outputs 1         							|
+
 
 #### 3. Creation of the Training Set & Training Process
 
 In this section I will show examples of the training data and some image augmentation.
 
 Here is an example of center-lane driving:
+
 ![alt text][center_example]
 
 The car is also equipped with left and right cameras, and the images recored from these cameras look like (from the same position above):
@@ -143,9 +176,14 @@ Flipping an image is done via the *fliplr* function of numpy. When we flip the i
 
 In summary, the training set has about 60000 images while the validation set has about 7000 images. The model is trained using Keras and saved as the file *model.h5* in the repo.
 
+The images are fed into the training process via generators. Generators are important because we may not be able to store all training and validation data inside the memory.
+
 #### 4. Misc. Notes
 
-In the drive.py file, the steering angle is predicted by the model, then I multiply it by 1.5. Otherwise, the car does not steer hard enough during sharp turn.
+In the drive.py file, the steering angle is predicted by the model, then I multiply it by 1.25. Otherwise, the car does not steer hard enough during sharp turn.
+
+When preprocessing the images, I need to make sure the dtype of numpy arrays are consistent. For example, RGB images should have dtype of np.uint8, while steering values can have dtype of np.float32.
+If the data types are mixed, I may see NaN loss while training.
 
 Lab Original README
 ---
