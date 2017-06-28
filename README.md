@@ -185,6 +185,9 @@ In the drive.py file, the steering angle is predicted by the model, then I multi
 When preprocessing the images, I need to make sure the dtype of numpy arrays are consistent. For example, RGB images should have dtype of np.uint8, while steering values can have dtype of np.float32.
 If the data types are mixed, I may see NaN loss while training.
 
+Thanks to Max Ritter, his solution at https://github.com/maxritter/SDC-End-to-end-driving
+inspired me to learn about generators and make this project great.
+
 Lab Original README
 ---
 This repository contains starting files for the Behavioral Cloning Project.
